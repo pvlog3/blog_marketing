@@ -27,7 +27,7 @@ export default function Hero({ posts }) {
             );
           })}
         </div>
-        <button className="arrow" onClick={() => scroll(1)} aria-label="Próximo">›</button>
+        <button className="arrow" onClick={() => scroll(1)} aria-label="Siguiente">›</button>
       </div>
     </section>
   );

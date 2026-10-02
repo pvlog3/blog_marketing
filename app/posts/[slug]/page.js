@@ -19,7 +19,7 @@ export default async function PostPage({ params }) {
   return (
     <article className="post">
       <p className="small" style={{ marginTop: 24 }}>
-        <Link href="/" className="muted">← Voltar</Link>
+        <Link href="/" className="muted">← Volver</Link>
       </p>
       <h1>{post.title}</h1>
       <div className="muted small">{new Date(post.created_at).toLocaleDateString("pt-BR")}</div>

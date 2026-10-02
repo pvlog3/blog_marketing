@@ -7,12 +7,12 @@ const script = Great_Vibes({ subsets: ["latin"], weight: "400", variable: "--fon
 
 export const metadata = {
   title: "Blog Marketing",
-  description: "Blog da faculdade",
+  description: "Blog de la universidad",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="pt-BR" className={`${sans.variable} ${script.variable}`}>
+    <html lang="es" className={`${sans.variable} ${script.variable}`}>
       <body>
         <header className="topbar">
           <div className="wide">
@@ -20,8 +20,8 @@ export default function RootLayout({ children }) {
               BLOG <span>Marketing</span>
             </Link>
             <nav className="nav">
-              <Link href="/">Home</Link>
-              <Link href="/#postagens">Postagens</Link>
+              <Link href="/">Inicio</Link>
+              <Link href="/#postagens">Publicaciones</Link>
               <form action="/" className="search">
                 <input type="search" name="q" placeholder="Buscar" aria-label="Buscar" />
               </form>
@@ -30,7 +30,7 @@ export default function RootLayout({ children }) {
         </header>
         {children}
         <footer className="foot">
-          Trabalho de faculdade · <Link href="/admin">Admin</Link>
+          Trabajo universitario · <Link href="/admin">Admin</Link>
         </footer>
       </body>
     </html>

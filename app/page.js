@@ -38,10 +38,10 @@ export default async function Home({ searchParams }) {
 
       <div className="wide layout">
         <section id="postagens">
-          <h2 className="section-title">{term ? `Resultados para “${q}”` : "Postagens"}</h2>
-          {error && <p className="err">Erro ao carregar: {error.message}</p>}
+          <h2 className="section-title">{term ? `Resultados para “${q}”` : "Publicaciones"}</h2>
+          {error && <p className="err">Error al cargar: {error.message}</p>}
           {!error && posts.length === 0 && (
-            <p className="muted">{term ? "Nada encontrado." : "Nenhuma postagem ainda."}</p>
+            <p className="muted">{term ? "No se encontró nada." : "Todavía no hay publicaciones."}</p>
           )}
 
           {rows.map((p, i) => (
@@ -51,7 +51,7 @@ export default async function Home({ searchParams }) {
                 <h3><Link href={`/posts/${p.slug}`}>{p.title}</Link></h3>
                 <p className="excerpt">{excerptOf(p)}</p>
                 <div className="meta">
-                  <Link href={`/posts/${p.slug}`} className="pill">Ler mais</Link>
+                  <Link href={`/posts/${p.slug}`} className="pill">Leer más</Link>
                   <span className="muted small">{formatDate(p.created_at)}</span>
                 </div>
               </div>
@@ -66,7 +66,7 @@ export default async function Home({ searchParams }) {
                   <h4><Link href={`/posts/${p.slug}`}>{p.title}</Link></h4>
                   <p className="excerpt small">{excerptOf(p, 90)}</p>
                   <div className="meta">
-                    <Link href={`/posts/${p.slug}`} className="pill sm">Ler mais</Link>
+                    <Link href={`/posts/${p.slug}`} className="pill sm">Leer más</Link>
                     <span className="muted small">{formatDate(p.created_at)}</span>
                   </div>
                 </article>
@@ -77,12 +77,12 @@ export default async function Home({ searchParams }) {
 
         <aside>
           <div className="side-pink">
-            <h3 className="side-title">Sobre o blog</h3>
-            <p className="muted small">Blog criado como trabalho da faculdade. Aqui ficam as postagens do curso.</p>
+            <h3 className="side-title">Sobre el blog</h3>
+            <p className="muted small">Blog creado como trabajo universitario. Aquí están las publicaciones del curso.</p>
 
             {all.length > 0 && (
               <>
-                <h3 className="side-title" style={{ marginTop: 28 }}>Recentes</h3>
+                <h3 className="side-title" style={{ marginTop: 28 }}>Recientes</h3>
                 <div className="recent">
                   {all.slice(0, 6).map((p) => (
                     <Link key={p.slug} href={`/posts/${p.slug}`} className="recent-item">
@@ -97,8 +97,8 @@ export default async function Home({ searchParams }) {
             )}
           </div>
           <div className="side-green">
-            <h3>Trabalho de faculdade</h3>
-            <p className="small">Obrigado pela visita!</p>
+            <h3>Trabajo universitario</h3>
+            <p className="small">¡Gracias por tu visita!</p>
           </div>
         </aside>
       </div>

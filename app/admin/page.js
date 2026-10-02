@@ -15,15 +15,15 @@ function Login() {
     setBusy(true);
     setError("");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setError("E-mail ou senha incorretos.");
+    if (error) setError("Correo o contraseña incorrectos.");
     setBusy(false);
   }
 
   return (
     <form onSubmit={submit} className="stack" style={{ maxWidth: 360 }}>
-      <h1>Entrar</h1>
-      <input type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} required />
-      <input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} required />
+      <h1>Iniciar sesión</h1>
+      <input type="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} required />
+      <input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required />
       {error && <div className="err small">{error}</div>}
       <button className="btn primary" disabled={busy}>{busy ? "Entrando…" : "Entrar"}</button>
     </form>
@@ -45,7 +45,7 @@ function Dashboard() {
   useEffect(() => { load(); }, []);
 
   async function remove(p) {
-    if (!confirm(`Excluir "${p.title}"? Não dá para desfazer.`)) return;
+    if (!confirm(`¿Eliminar "${p.title}"? No se puede deshacer.`)) return;
     const { error } = await supabase.from("posts").delete().eq("id", p.id);
     if (error) setError(error.message);
     else load();
@@ -60,27 +60,27 @@ function Dashboard() {
   return (
     <>
       <div className="row" style={{ marginTop: 28 }}>
-        <h1 style={{ margin: 0 }}>Painel</h1>
+        <h1 style={{ margin: 0 }}>Panel</h1>
         <div className="row">
-          <Link href="/admin/editor/new" className="btn primary">+ Nova postagem</Link>
-          <button className="btn" onClick={() => supabase.auth.signOut()}>Sair</button>
+          <Link href="/admin/editor/new" className="btn primary">+ Nueva publicación</Link>
+          <button className="btn" onClick={() => supabase.auth.signOut()}>Salir</button>
         </div>
       </div>
       {error && <p className="err">{error}</p>}
-      {posts === null && <p className="muted">Carregando…</p>}
-      {posts?.length === 0 && <p className="muted">Nenhuma postagem. Crie a primeira!</p>}
+      {posts === null && <p className="muted">Cargando…</p>}
+      {posts?.length === 0 && <p className="muted">No hay publicaciones. ¡Crea la primera!</p>}
       {posts?.map((p) => (
         <div key={p.id} className="card" style={{ cursor: "default" }}>
           <div className="row">
             <div>
               <h2>{p.title}</h2>
-              <span className={`badge ${p.published ? "live" : ""}`}>{p.published ? "Publicado" : "Rascunho"}</span>
+              <span className={`badge ${p.published ? "live" : ""}`}>{p.published ? "Publicado" : "Borrador"}</span>
             </div>
             <div className="row">
               {p.published && <Link href={`/posts/${p.slug}`} className="btn sm">Ver</Link>}
               <Link href={`/admin/editor/${p.id}`} className="btn sm">Editar</Link>
               <button className="btn sm" onClick={() => togglePublish(p)}>{p.published ? "Despublicar" : "Publicar"}</button>
-              <button className="btn sm danger" onClick={() => remove(p)}>Excluir</button>
+              <button className="btn sm danger" onClick={() => remove(p)}>Eliminar</button>
             </div>
           </div>
         </div>
@@ -91,14 +91,14 @@ function Dashboard() {
 
 export default function AdminPage() {
   const { loading, session, isAdmin } = useAdmin();
-  if (loading) return <p className="muted">Carregando…</p>;
+  if (loading) return <p className="muted">Cargando…</p>;
   if (!session) return <Login />;
   if (!isAdmin)
     return (
       <div className="stack">
-        <h1>Sem permissão</h1>
-        <p className="muted">Essa conta não é administradora. Você pode apenas visualizar as postagens.</p>
-        <button className="btn" onClick={() => supabase.auth.signOut()}>Sair</button>
+        <h1>Sin permiso</h1>
+        <p className="muted">Esta cuenta no es administradora. Solo puedes ver las publicaciones.</p>
+        <button className="btn" onClick={() => supabase.auth.signOut()}>Salir</button>
       </div>
     );
   return <Dashboard />;

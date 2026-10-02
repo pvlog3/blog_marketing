@@ -18,7 +18,7 @@ function slugify(text) {
   );
 }
 
-const LABELS = { heading: "Título de seção", text: "Texto", image: "Imagem" };
+const LABELS = { heading: "Título de sección", text: "Texto", image: "Imagen" };
 
 function Editor() {
   const { id } = useParams();
@@ -60,18 +60,18 @@ function Editor() {
 
   async function upload(bid, file) {
     if (!file) return;
-    setMsg("Enviando imagem…");
+    setMsg("Subiendo imagen…");
     const ext = file.name.split(".").pop().toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
     const path = `${Date.now()}-${uid()}.${ext}`;
     const { error } = await supabase.storage.from("post-images").upload(path, file);
-    if (error) return setMsg("Erro no upload: " + error.message);
+    if (error) return setMsg("Error al subir: " + error.message);
     const { data } = supabase.storage.from("post-images").getPublicUrl(path);
     update(bid, { url: data.publicUrl });
     setMsg("");
   }
 
   async function save(nextPublished = published) {
-    if (!title.trim()) return setMsg("Dê um título à postagem.");
+    if (!title.trim()) return setMsg("Ponle un título a la publicación.");
     setSaving(true);
     setMsg("");
     const row = { title: title.trim(), blocks, published: nextPublished, updated_at: new Date().toISOString() };
@@ -83,25 +83,25 @@ function Editor() {
       ({ error } = await supabase.from("posts").update(row).eq("id", id));
     }
     setSaving(false);
-    if (error) return setMsg("Erro ao salvar: " + error.message);
+    if (error) return setMsg("Error al guardar: " + error.message);
     setPublished(nextPublished);
-    setMsg("Salvo ✔");
+    setMsg("Guardado ✔");
   }
 
-  if (!loaded) return <p className="muted">Carregando…</p>;
+  if (!loaded) return <p className="muted">Cargando…</p>;
 
   return (
     <>
       <div className="row" style={{ marginTop: 24 }}>
-        <Link href="/admin" className="muted small">← Painel</Link>
-        <span className={`badge ${published ? "live" : ""}`}>{published ? "Publicado" : "Rascunho"}</span>
+        <Link href="/admin" className="muted small">← Panel</Link>
+        <span className={`badge ${published ? "live" : ""}`}>{published ? "Publicado" : "Borrador"}</span>
       </div>
 
       <input
         type="text"
         className="title-input"
         style={{ marginTop: 16 }}
-        placeholder="Título da postagem"
+        placeholder="Título de la publicación"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
@@ -112,14 +112,14 @@ function Editor() {
             <span className="tag">{LABELS[b.type]}</span>
             <button className="btn sm" onClick={() => move(i, -1)} disabled={i === 0}>↑</button>
             <button className="btn sm" onClick={() => move(i, 1)} disabled={i === blocks.length - 1}>↓</button>
-            <button className="btn sm danger" onClick={() => remove(b.id)}>Remover</button>
+            <button className="btn sm danger" onClick={() => remove(b.id)}>Quitar</button>
           </div>
 
           {b.type === "heading" && (
-            <input type="text" placeholder="Título da seção" value={b.text} onChange={(e) => update(b.id, { text: e.target.value })} />
+            <input type="text" placeholder="Título de la sección" value={b.text} onChange={(e) => update(b.id, { text: e.target.value })} />
           )}
           {b.type === "text" && (
-            <textarea placeholder="Escreva seu texto…" value={b.text} onChange={(e) => update(b.id, { text: e.target.value })} />
+            <textarea placeholder="Escribe tu texto…" value={b.text} onChange={(e) => update(b.id, { text: e.target.value })} />
           )}
           {b.type === "image" && (
             <div className="stack">
@@ -128,24 +128,24 @@ function Editor() {
                 <img src={b.url} alt="" />
               )}
               <input type="file" accept="image/*" onChange={(e) => upload(b.id, e.target.files[0])} />
-              <input type="text" placeholder="Legenda (opcional)" value={b.caption || ""} onChange={(e) => update(b.id, { caption: e.target.value })} />
+              <input type="text" placeholder="Pie de foto (opcional)" value={b.caption || ""} onChange={(e) => update(b.id, { caption: e.target.value })} />
             </div>
           )}
         </div>
       ))}
 
       <div className="addbar">
-        <button className="btn" onClick={() => add("heading")}>+ Título de seção</button>
+        <button className="btn" onClick={() => add("heading")}>+ Título de sección</button>
         <button className="btn" onClick={() => add("text")}>+ Texto</button>
-        <button className="btn" onClick={() => add("image")}>+ Imagem</button>
+        <button className="btn" onClick={() => add("image")}>+ Imagen</button>
       </div>
 
       <div className="row" style={{ justifyContent: "flex-start", marginBottom: 60 }}>
-        <button className="btn" onClick={() => save(false)} disabled={saving}>Salvar rascunho</button>
+        <button className="btn" onClick={() => save(false)} disabled={saving}>Guardar borrador</button>
         <button className="btn primary" onClick={() => save(true)} disabled={saving}>
-          {published ? "Salvar e manter publicado" : "Publicar"}
+          {published ? "Guardar y mantener publicado" : "Publicar"}
         </button>
-        {msg && <span className={msg.startsWith("Erro") ? "err small" : "muted small"}>{msg}</span>}
+        {msg && <span className={msg.startsWith("Error") ? "err small" : "muted small"}>{msg}</span>}
       </div>
     </>
   );
@@ -153,11 +153,11 @@ function Editor() {
 
 export default function EditorPage() {
   const { loading, isAdmin } = useAdmin();
-  if (loading) return <p className="muted">Carregando…</p>;
+  if (loading) return <p className="muted">Cargando…</p>;
   if (!isAdmin)
     return (
       <p>
-        Acesso restrito. <Link href="/admin">Entrar como administrador</Link>
+        Acceso restringido. <Link href="/admin">Entrar como administrador</Link>
       </p>
     );
   return <Editor />;
