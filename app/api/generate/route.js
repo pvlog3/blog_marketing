@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
-const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+export const maxDuration = 60; // segundos (reintentos pueden tardar)
 
 const SYSTEM =
   "Eres un redactor de un blog universitario sobre marketing. Escribe siempre en español, " +
@@ -25,8 +24,14 @@ async function isAdmin(request) {
   return !!data;
 }
 
-async function gemini(prompt, generationConfig = {}) {
-  const res = await fetch(ENDPOINT, {
+// Modelos gratuitos, em ordem de preferência; se um estiver ocupado/indisponível, tenta o próximo
+const MODELS = [process.env.GEMINI_MODEL, "gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"]
+  .filter(Boolean)
+  .filter((m, i, a) => a.indexOf(m) === i);
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function callModel(model, prompt, generationConfig) {
+  return fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
     body: JSON.stringify({
@@ -35,15 +40,32 @@ async function gemini(prompt, generationConfig = {}) {
       generationConfig,
     }),
   });
-  if (!res.ok) {
-    const err = new Error(res.status === 429 ? "Límite de uso de Gemini alcanzado. Espera un momento e inténtalo de nuevo." : res.status === 404 ? `Modelo \"${MODEL}\" no disponible. Define GEMINI_MODEL con un modelo vigente.` : `Error de Gemini (${res.status}).`);
-    err.status = res.status === 429 ? 429 : 502;
-    throw err;
+}
+
+async function gemini(prompt, generationConfig = {}) {
+  let last = 0;
+  for (const model of MODELS) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const res = await callModel(model, prompt, generationConfig);
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "";
+        if (text.trim()) return text.trim();
+        last = 0;
+        break; // resposta vazia: tenta outro modelo
+      }
+      last = res.status;
+      if (res.status === 503 || res.status === 500) await wait(1200); // sobrecarga: tenta de novo
+      else break; // 404/429/outros: passa para o próximo modelo
+    }
   }
-  const data = await res.json();
-  const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text).join("") || "";
-  if (!text.trim()) throw Object.assign(new Error("La IA no devolvió texto. Prueba con otra instrucción."), { status: 502 });
-  return text.trim();
+  const msg =
+    last === 429 ? "Límite de uso de Gemini alcanzado. Espera un momento e inténtalo de nuevo."
+    : last === 503 ? "Gemini está saturado en este momento. Inténtalo de nuevo en unos segundos."
+    : last === 404 ? "Ningún modelo de Gemini está disponible. Define GEMINI_MODEL con un modelo vigente."
+    : last ? `Error de Gemini (${last}).`
+    : "La IA no devolvió texto. Prueba con otra instrucción.";
+  throw Object.assign(new Error(msg), { status: last === 429 ? 429 : 502 });
 }
 
 export async function POST(request) {
