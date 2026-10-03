@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
 const SYSTEM =
@@ -36,7 +36,7 @@ async function gemini(prompt, generationConfig = {}) {
     }),
   });
   if (!res.ok) {
-    const err = new Error(res.status === 429 ? "Límite de uso de Gemini alcanzado. Espera un momento e inténtalo de nuevo." : `Error de Gemini (${res.status}).`);
+    const err = new Error(res.status === 429 ? "Límite de uso de Gemini alcanzado. Espera un momento e inténtalo de nuevo." : res.status === 404 ? `Modelo \"${MODEL}\" no disponible. Define GEMINI_MODEL con un modelo vigente.` : `Error de Gemini (${res.status}).`);
     err.status = res.status === 429 ? 429 : 502;
     throw err;
   }
