@@ -136,3 +136,9 @@ textarea { resize: vertical; min-height: 110px; }
   .cards { grid-template-columns: 1fr; }
   .hero-track { justify-content: flex-start; }
 }
+
+/* generación con IA */
+.aibar { display: flex; gap: 8px; }
+.aibar input { flex: 1; }
+.aibar .btn { white-space: nowrap; }
+.block.ai { background: var(--pink); border-color: var(--mauve); }

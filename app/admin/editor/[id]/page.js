@@ -32,6 +32,9 @@ function Editor() {
   const [blocks, setBlocks] = useState([{ id: uid(), type: "text", text: "" }]);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
+  const [aiPrompts, setAiPrompts] = useState({});
+  const [aiBusy, setAiBusy] = useState(null); // id do bloco, "draft" ou null
+  const [draftTopic, setDraftTopic] = useState("");
 
   useEffect(() => {
     if (isNew) return;
@@ -70,6 +73,56 @@ function Editor() {
     setMsg("");
   }
 
+  // Chama a rota /api/generate (a chave do Gemini fica só no servidor)
+  async function ai(payload) {
+    const { data } = await supabase.auth.getSession();
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session?.access_token}` },
+      body: JSON.stringify(payload),
+    });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(out.error || "No se pudo generar el texto.");
+    return out;
+  }
+
+  async function generateText(bid) {
+    const prompt = aiPrompts[bid]?.trim();
+    if (!prompt) return setMsg("Error: escribe una instrucción para la IA.");
+    const current = blocks.find((b) => b.id === bid);
+    if (current.text.trim() && !confirm("Este bloque ya tiene texto. ¿Reemplazarlo?")) return;
+    setAiBusy(bid);
+    setMsg("");
+    try {
+      const { text } = await ai({ mode: "text", prompt, title });
+      update(bid, { text });
+    } catch (e) {
+      setMsg("Error: " + e.message);
+    }
+    setAiBusy(null);
+  }
+
+  async function generateDraft() {
+    if (!draftTopic.trim()) return setMsg("Error: escribe el tema de la publicación.");
+    setAiBusy("draft");
+    setMsg("");
+    try {
+      const out = await ai({ mode: "draft", prompt: draftTopic });
+      if (!title.trim()) setTitle(out.title);
+      const generated = out.sections.flatMap((s) => [
+        { id: uid(), type: "heading", text: s.heading },
+        { id: uid(), type: "text", text: s.text },
+      ]);
+      // si el único bloque es un texto vacío, lo reemplaza; si no, agrega al final
+      setBlocks((bs) => (bs.length === 1 && bs[0].type === "text" && !bs[0].text.trim() ? generated : [...bs, ...generated]));
+      setDraftTopic("");
+      setMsg("Borrador generado. Revísalo y edítalo antes de publicar.");
+    } catch (e) {
+      setMsg("Error: " + e.message);
+    }
+    setAiBusy(null);
+  }
+
   async function save(nextPublished = published) {
     if (!title.trim()) return setMsg("Ponle un título a la publicación.");
     setSaving(true);
@@ -106,6 +159,21 @@ function Editor() {
         onChange={(e) => setTitle(e.target.value)}
       />
 
+      <div className="block ai">
+        <div className="tools"><span className="tag">✨ Borrador completo con IA</span></div>
+        <div className="aibar">
+          <input
+            type="text"
+            placeholder="Tema: p. ej. “Los 4 Ps del marketing para pequeñas empresas”"
+            value={draftTopic}
+            onChange={(e) => setDraftTopic(e.target.value)}
+          />
+          <button className="btn primary" onClick={generateDraft} disabled={aiBusy !== null}>
+            {aiBusy === "draft" ? "Generando…" : "Generar"}
+          </button>
+        </div>
+      </div>
+
       {blocks.map((b, i) => (
         <div key={b.id} className="block">
           <div className="tools">
@@ -119,7 +187,20 @@ function Editor() {
             <input type="text" placeholder="Título de la sección" value={b.text} onChange={(e) => update(b.id, { text: e.target.value })} />
           )}
           {b.type === "text" && (
-            <textarea placeholder="Escribe tu texto…" value={b.text} onChange={(e) => update(b.id, { text: e.target.value })} />
+            <div className="stack">
+              <textarea placeholder="Escribe tu texto…" value={b.text} onChange={(e) => update(b.id, { text: e.target.value })} />
+              <div className="aibar">
+                <input
+                  type="text"
+                  placeholder="✨ Instrucción para la IA (p. ej. “introducción de 2 párrafos”)"
+                  value={aiPrompts[b.id] || ""}
+                  onChange={(e) => setAiPrompts((p) => ({ ...p, [b.id]: e.target.value }))}
+                />
+                <button className="btn" onClick={() => generateText(b.id)} disabled={aiBusy !== null}>
+                  {aiBusy === b.id ? "Generando…" : "Generar"}
+                </button>
+              </div>
+            </div>
           )}
           {b.type === "image" && (
             <div className="stack">
